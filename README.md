@@ -90,7 +90,7 @@ library_management/
 ### Step 1 — Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/library-management.git
+git clone https://github.com/Satishnm02/LibraryOS.git
 cd library-management
 ```
 
@@ -234,7 +234,7 @@ cryptography
 ## 👨‍💻 Author
 
 **Satish Malladad**
-- GitHub: [@yourusername](https://github.com/yourusername)
+- GitHub: [@satish02](https://github.com/yourusername)
 - Email: Satishmalladad02@gmail.com
 
 ---
