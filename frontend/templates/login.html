@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Login — LibraryOS{% endblock %}
+
+{% block auth_content %}
+<div class="login-screen">
+  <div class="login-left">
+    <div class="login-art">
+      <div class="art-circle c1"></div>
+      <div class="art-circle c2"></div>
+      <div class="art-circle c3"></div>
+      <div class="login-brand">
+        <i class="bi bi-book-half"></i>
+        <h1>LibraryOS</h1>
+        <p>Smart Digital Library Automation Platform</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="login-right">
+    <div class="login-box">
+      <h2>Welcome back</h2>
+      <p class="login-sub">Sign in to your admin account</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+          <div class="alert alert-{{ cat }} alert-dismissible">{{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('main.login') }}">
+        <div class="form-group-custom">
+          <i class="bi bi-person"></i>
+          <input type="text" name="username" placeholder="Username" required autocomplete="username"/>
+        </div>
+        <div class="form-group-custom">
+          <i class="bi bi-lock"></i>
+          <input type="password" name="password" placeholder="Password" required autocomplete="current-password"/>
+        </div>
+        <button type="submit" class="btn-login">Sign In <i class="bi bi-arrow-right"></i></button>
+      </form>
+      <p class="login-hint">Default: <strong>admin</strong> / <strong>admin123</strong></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

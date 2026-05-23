@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Members — LibraryOS{% endblock %}
+{% block page_title %}Member Management{% endblock %}
+
+{% block content %}
+<div class="page-actions">
+  <form class="search-bar" method="GET">
+    <i class="bi bi-search"></i>
+    <input type="text" name="search" value="{{ search }}" placeholder="Search name, email, phone…"/>
+    <button type="submit" class="btn-primary-sm">Search</button>
+  </form>
+  <button class="btn-primary-sm" data-bs-toggle="modal" data-bs-target="#addMemberModal">
+    <i class="bi bi-person-plus-fill"></i> Add Member
+  </button>
+</div>
+
+<div class="table-card">
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Department</th><th>Joined</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for m in members.items %}
+        <tr>
+          <td>{{ m.id }}</td>
+          <td><strong>{{ m.name }}</strong></td>
+          <td>{{ m.email }}</td>
+          <td>{{ m.phone }}</td>
+          <td>{{ m.department }}</td>
+          <td>{{ m.join_date.strftime('%d %b %Y') }}</td>
+          <td><span class="badge-status badge-{{ m.status }}">{{ m.status.title() }}</span></td>
+          <td class="actions-cell">
+            <button class="btn-icon edit-icon"
+              data-bs-toggle="modal" data-bs-target="#editMemberModal"
+              data-id="{{ m.id }}" data-name="{{ m.name }}" data-email="{{ m.email }}"
+              data-phone="{{ m.phone }}" data-dept="{{ m.department }}" data-status="{{ m.status }}">
+              <i class="bi bi-pencil-fill"></i>
+            </button>
+            <form method="POST" action="{{ url_for('main.delete_member', mid=m.id) }}"
+                  onsubmit="return confirm('Delete this member?');" style="display:inline">
+              <button class="btn-icon delete-icon"><i class="bi bi-trash3-fill"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="empty-row">No members found</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if members.pages > 1 %}
+  <div class="pagination-row">
+    {% if members.has_prev %}
+      <a href="{{ url_for('main.members', page=members.prev_num, search=search) }}" class="page-btn">&laquo;</a>
+    {% endif %}
+    {% for p in members.iter_pages() %}
+      {% if p %}
+        <a href="{{ url_for('main.members', page=p, search=search) }}"
+           class="page-btn {% if p==members.page %}active{% endif %}">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if members.has_next %}
+      <a href="{{ url_for('main.members', page=members.next_num, search=search) }}" class="page-btn">&raquo;</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- ADD MEMBER -->
+<div class="modal fade" id="addMemberModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content modal-custom">
+      <div class="modal-header-custom">
+        <h5><i class="bi bi-person-plus-fill"></i> Add Member</h5>
+        <button data-bs-dismiss="modal" class="modal-close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <form method="POST" action="{{ url_for('main.add_member') }}">
+        <div class="modal-body-custom">
+          <div class="form-grid-2">
+            <div class="form-group-modal"><label>Name *</label><input type="text" name="name" required class="input-custom"/></div>
+            <div class="form-group-modal"><label>Email *</label><input type="email" name="email" required class="input-custom"/></div>
+            <div class="form-group-modal"><label>Phone</label><input type="text" name="phone" class="input-custom"/></div>
+            <div class="form-group-modal"><label>Department</label><input type="text" name="department" class="input-custom"/></div>
+            <div class="form-group-modal span-2">
+              <label>Status</label>
+              <select name="status" class="input-custom">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer-custom">
+          <button type="button" data-bs-dismiss="modal" class="btn-cancel">Cancel</button>
+          <button type="submit" class="btn-submit">Add Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MEMBER -->
+<div class="modal fade" id="editMemberModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content modal-custom">
+      <div class="modal-header-custom">
+        <h5><i class="bi bi-pencil-fill"></i> Edit Member</h5>
+        <button data-bs-dismiss="modal" class="modal-close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <form method="POST" id="editMemberForm" action="">
+        <div class="modal-body-custom">
+          <div class="form-grid-2">
+            <div class="form-group-modal"><label>Name *</label><input type="text" name="name" id="em_name" required class="input-custom"/></div>
+            <div class="form-group-modal"><label>Email *</label><input type="email" name="email" id="em_email" required class="input-custom"/></div>
+            <div class="form-group-modal"><label>Phone</label><input type="text" name="phone" id="em_phone" class="input-custom"/></div>
+            <div class="form-group-modal"><label>Department</label><input type="text" name="department" id="em_dept" class="input-custom"/></div>
+            <div class="form-group-modal span-2">
+              <label>Status</label>
+              <select name="status" id="em_status" class="input-custom">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer-custom">
+          <button type="button" data-bs-dismiss="modal" class="btn-cancel">Cancel</button>
+          <button type="submit" class="btn-submit">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

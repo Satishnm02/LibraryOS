@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Issue / Return — LibraryOS{% endblock %}
+{% block page_title %}Issue & Return{% endblock %}
+
+{% block content %}
+<div class="two-col-layout">
+
+  <!-- ISSUE FORM -->
+  <div class="form-card">
+    <h3 class="card-title"><i class="bi bi-arrow-up-right-circle-fill"></i> Issue Book</h3>
+    <form method="POST" action="{{ url_for('main.issue_book') }}">
+      <div class="form-group-modal">
+        <label>Select Member *</label>
+        <select name="member_id" required class="input-custom">
+          <option value="">— Choose Member —</option>
+          {% for m in members %}
+            <option value="{{ m.id }}">{{ m.name }} ({{ m.department }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group-modal">
+        <label>Select Book *</label>
+        <select name="book_id" required class="input-custom">
+          <option value="">— Choose Book —</option>
+          {% for b in books %}
+            <option value="{{ b.id }}">{{ b.title }} — {{ b.author }} [{{ b.available_quantity }} left]</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="info-note"><i class="bi bi-info-circle"></i> Loan period: 14 days. Fine: ₹5/overdue day.</div>
+      <button type="submit" class="btn-submit full-width">
+        <i class="bi bi-arrow-up-right-circle-fill"></i> Issue Book
+      </button>
+    </form>
+  </div>
+
+  <!-- STATS -->
+  <div class="form-card info-card">
+    <h3 class="card-title"><i class="bi bi-info-circle-fill"></i> Quick Info</h3>
+    <div class="info-list">
+      <div class="info-item"><span>Total Issued</span><strong>{{ issued|length }}</strong></div>
+      <div class="info-item"><span>Available Books</span><strong>{{ books|length }}</strong></div>
+      <div class="info-item"><span>Active Members</span><strong>{{ members|length }}</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- ISSUED BOOKS TABLE -->
+<div class="table-card mt-4">
+  <div class="table-header">
+    <h3>Currently Issued Books</h3>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr><th>#</th><th>Book</th><th>Member</th><th>Issue Date</th><th>Due Date</th><th>Fine (est.)</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for ib in issued %}
+        {% set fine = ib.calculate_fine() %}
+        <tr class="{% if fine > 0 %}row-overdue{% endif %}">
+          <td>{{ ib.id }}</td>
+          <td><strong>{{ ib.book.title }}</strong></td>
+          <td>{{ ib.member.name }}</td>
+          <td>{{ ib.issue_date.strftime('%d %b %Y') }}</td>
+          <td class="{% if fine > 0 %}text-danger{% endif %}">{{ ib.due_date.strftime('%d %b %Y') }}</td>
+          <td>{% if fine > 0 %}<span class="text-danger">₹{{ fine }}</span>{% else %}—{% endif %}</td>
+          <td>
+            <form method="POST" action="{{ url_for('main.return_book', ib_id=ib.id) }}"
+                  onsubmit="return confirm('Return this book?');">
+              <button class="btn-return"><i class="bi bi-arrow-return-left"></i> Return</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="empty-row">No books currently issued</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

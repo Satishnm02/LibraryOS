@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Portal — LibraryOS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"/>
+  <style>
+    .student-topbar {
+      background: var(--accent); color: #fff;
+      padding: 0 28px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 12px rgba(99,102,241,0.3);
+    }
+    .student-brand { display:flex; align-items:center; gap:10px; font-family:var(--font-head); font-size:18px; font-weight:800; }
+    .student-avatar { width:34px; height:34px; background:rgba(255,255,255,0.25); border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:14px; }
+    .student-logout { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:#fff; padding:6px 14px; border-radius:8px; font-size:13px; cursor:pointer; text-decoration:none; display:flex; align-items:center; gap:6px; transition:background 0.2s; }
+    .student-logout:hover { background:rgba(255,255,255,0.25); color:#fff; }
+    .portal-body { background:var(--bg); min-height:calc(100vh - 64px); padding:28px; }
+    .my-books-section { background:var(--surface); border-radius:14px; border:1px solid var(--border); padding:20px 24px; margin-bottom:20px; box-shadow:var(--shadow); }
+    .section-title { font-family:var(--font-head); font-size:16px; font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .my-book-card { display:flex; align-items:center; gap:16px; padding:14px 16px; background:var(--surface2); border-radius:10px; margin-bottom:10px; border:1px solid var(--border); }
+    .my-book-icon { width:44px; height:44px; background:color-mix(in srgb, var(--accent) 15%, transparent); border-radius:10px; display:grid; place-items:center; color:var(--accent); font-size:18px; flex-shrink:0; }
+    .my-book-info { flex:1; }
+    .my-book-title { font-weight:700; font-size:14px; }
+    .my-book-author { font-size:12px; color:var(--text-secondary); }
+    .due-badge { padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; white-space:nowrap; }
+    .due-ok { background:rgba(34,197,94,0.12); color:#15803d; }
+    .due-soon { background:rgba(245,158,11,0.12); color:#b45309; }
+    .due-overdue { background:rgba(239,68,68,0.12); color:#b91c1c; }
+    .fine-alert { background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); border-radius:10px; padding:14px 18px; margin-bottom:20px; display:flex; align-items:center; gap:12px; color:#b91c1c; font-size:14px; font-weight:500; }
+    .library-layout { display:flex; gap:20px; }
+    .cat-sidebar { min-width:190px; background:var(--surface); border-radius:14px; border:1px solid var(--border); padding:16px; box-shadow:var(--shadow); align-self:flex-start; position:sticky; top:80px; }
+    .cat-label { font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+    .cat-link { display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-radius:8px; text-decoration:none; font-size:13px; margin-bottom:3px; color:var(--text-primary); transition:all 0.2s; }
+    .cat-link:hover { background:var(--surface2); }
+    .cat-link.active { background:var(--accent); color:#fff; font-weight:600; }
+    .cat-count { font-size:11px; }
+    .cat-link.active .cat-count { color:#fff; }
+    .cat-link:not(.active) .cat-count { color:var(--accent); }
+    .books-area { flex:1; }
+    .search-student { display:flex; gap:10px; margin-bottom:18px; }
+    .search-student input { flex:1; padding:10px 14px; background:var(--surface); border:1px solid var(--border); border-radius:10px; color:var(--text-primary); font-family:var(--font-body); font-size:14px; outline:none; }
+    .search-student input:focus { border-color:var(--accent); }
+    .books-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:16px; }
+    .book-card { background:var(--surface); border-radius:12px; border:1px solid var(--border); padding:18px; box-shadow:var(--shadow); transition:transform 0.2s, box-shadow 0.2s; }
+    .book-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-md); }
+    .book-card-icon { width:48px; height:48px; background:color-mix(in srgb, var(--accent) 12%, transparent); border-radius:10px; display:grid; place-items:center; color:var(--accent); font-size:20px; margin-bottom:12px; }
+    .book-card-title { font-weight:700; font-size:14px; margin-bottom:4px; line-height:1.3; }
+    .book-card-author { font-size:12px; color:var(--text-secondary); margin-bottom:10px; }
+    .book-card-cat { display:inline-block; background:var(--surface2); color:var(--text-secondary); padding:2px 8px; border-radius:6px; font-size:11px; margin-bottom:10px; }
+    .book-card-footer { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+    .avail-tag { font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px; }
+    .avail-yes { background:rgba(34,197,94,0.12); color:#15803d; }
+    .avail-no  { background:rgba(239,68,68,0.12); color:#b91c1c; }
+    .back-date { font-size:11px; color:#e67e22; margin-top:4px; }
+    .btn-request { display:inline-flex; align-items:center; gap:5px; padding:7px 14px; background:var(--accent); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; margin-top:10px; width:100%; justify-content:center; transition:background 0.2s; }
+    .btn-request:hover { background:var(--accent-hover); }
+    .btn-requested { display:inline-flex; align-items:center; gap:5px; padding:7px 14px; background:rgba(99,102,241,0.1); color:var(--accent); border:1px solid rgba(99,102,241,0.3); border-radius:8px; font-size:12px; font-weight:600; margin-top:10px; width:100%; justify-content:center; cursor:default; }
+    .student-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+    .student-stat { background:var(--surface); border-radius:12px; border:1px solid var(--border); padding:16px 20px; display:flex; align-items:center; gap:14px; box-shadow:var(--shadow); }
+    .student-stat-icon { width:42px; height:42px; border-radius:10px; display:grid; place-items:center; font-size:18px; flex-shrink:0; }
+    .si-blue { background:rgba(59,130,246,0.12); color:#1d4ed8; }
+    .si-green { background:rgba(34,197,94,0.12); color:#15803d; }
+    .si-red { background:rgba(239,68,68,0.12); color:#b91c1c; }
+    .si-yellow { background:rgba(245,158,11,0.12); color:#b45309; }
+    .student-stat-val { font-family:var(--font-head); font-size:22px; font-weight:800; }
+    .student-stat-label { font-size:12px; color:var(--text-secondary); }
+    .req-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+    .req-pending  { background:rgba(245,158,11,0.12); color:#b45309; }
+    .req-approved { background:rgba(34,197,94,0.12); color:#15803d; }
+    .req-rejected { background:rgba(239,68,68,0.12); color:#b91c1c; }
+  </style>
+</head>
+<body>
+
+<div class="student-topbar">
+  <div class="student-brand">
+    <i class="bi bi-book-half"></i> LibraryOS
+    <span style="background:rgba(255,255,255,0.2);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500;">Student</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;font-size:14px;color:#fff;">
+    <div class="student-avatar">{{ member.name[0].upper() }}</div>
+    <span>{{ member.name }}</span>
+    <a href="{{ url_for('main.student_logout') }}" class="student-logout">
+      <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+  </div>
+</div>
+
+<div class="portal-body">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+        <div class="toast-msg toast-{{ cat }}" style="margin-bottom:14px;">
+          <i class="bi bi-info-circle-fill"></i> {{ msg }}
+          <button onclick="this.parentElement.remove()"><i class="bi bi-x"></i></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% if my_fines %}
+  <div class="fine-alert">
+    <i class="bi bi-exclamation-triangle-fill" style="font-size:20px;"></i>
+    <div>You have <strong>{{ my_fines|length }} unpaid fine(s)</strong> totalling <strong>₹{{ my_fines|sum(attribute='amount')|int }}</strong>. Please visit the library counter.</div>
+  </div>
+  {% endif %}
+
+  <!-- STATS -->
+  <div class="student-stats">
+    <div class="student-stat">
+      <div class="student-stat-icon si-blue"><i class="bi bi-book-fill"></i></div>
+      <div><div class="student-stat-val">{{ my_books|length }}</div><div class="student-stat-label">Books Borrowed</div></div>
+    </div>
+    <div class="student-stat">
+      <div class="student-stat-icon si-green"><i class="bi bi-journals"></i></div>
+      <div><div class="student-stat-val">{{ books|selectattr('available_quantity','gt',0)|list|length }}</div><div class="student-stat-label">Available Books</div></div>
+    </div>
+    <div class="student-stat">
+      <div class="student-stat-icon si-yellow"><i class="bi bi-hourglass-split"></i></div>
+      <div><div class="student-stat-val">{{ my_requests|selectattr('status','eq','pending')|list|length }}</div><div class="student-stat-label">Pending Requests</div></div>
+    </div>
+    <div class="student-stat">
+      <div class="student-stat-icon si-red"><i class="bi bi-cash-coin"></i></div>
+      <div><div class="student-stat-val">₹{{ my_fines|sum(attribute='amount')|int }}</div><div class="student-stat-label">Pending Fines</div></div>
+    </div>
+  </div>
+
+  <!-- MY BORROWED BOOKS -->
+  <div class="my-books-section">
+    <div class="section-title"><i class="bi bi-bookmark-fill" style="color:var(--accent);"></i> My Borrowed Books</div>
+    {% if my_books %}
+      {% for ib in my_books %}
+      <div class="my-book-card">
+        <div class="my-book-icon"><i class="bi bi-book-fill"></i></div>
+        <div class="my-book-info">
+          <div class="my-book-title">{{ ib.book.title }}</div>
+          <div class="my-book-author">{{ ib.book.author }} &nbsp;·&nbsp; Issued: {{ ib.issue_date.strftime('%d %b %Y') }}</div>
+        </div>
+        <div style="text-align:right;">
+          {% if ib.due_date < datetime.utcnow() %}
+            <div class="due-badge due-overdue"><i class="bi bi-exclamation-circle-fill"></i> Overdue!</div>
+            <div style="font-size:11px;color:#b91c1c;margin-top:4px;">Was due {{ ib.due_date.strftime('%d %b %Y') }}</div>
+          {% elif (ib.due_date - datetime.utcnow()).days <= 3 %}
+            <div class="due-badge due-soon"><i class="bi bi-clock-fill"></i> Due Soon</div>
+            <div style="font-size:11px;color:#b45309;margin-top:4px;">Due {{ ib.due_date.strftime('%d %b %Y') }}</div>
+          {% else %}
+            <div class="due-badge due-ok"><i class="bi bi-check-circle-fill"></i> On Time</div>
+            <div style="font-size:11px;color:#15803d;margin-top:4px;">Due {{ ib.due_date.strftime('%d %b %Y') }}</div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="text-align:center;padding:24px;color:var(--text-secondary);">
+        <i class="bi bi-inbox" style="font-size:32px;display:block;margin-bottom:8px;opacity:0.4;"></i>
+        No books currently borrowed
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- MY REQUESTS -->
+  {% if my_requests %}
+  <div class="my-books-section">
+    <div class="section-title"><i class="bi bi-send-fill" style="color:var(--accent);"></i> My Book Requests</div>
+    {% for r in my_requests %}
+    <div class="my-book-card">
+      <div class="my-book-icon"><i class="bi bi-book-half"></i></div>
+      <div class="my-book-info">
+        <div class="my-book-title">{{ r.book.title }}</div>
+        <div class="my-book-author">{{ r.book.author }} &nbsp;·&nbsp; Requested: {{ r.requested_at.strftime('%d %b %Y') }}</div>
+      </div>
+      <div style="text-align:right;">
+        {% if r.status == 'pending' %}
+          <span class="req-badge req-pending"><i class="bi bi-hourglass-split"></i> Pending</span>
+        {% elif r.status == 'approved' %}
+          <span class="req-badge req-approved"><i class="bi bi-check-circle-fill"></i> Approved</span>
+          <div style="font-size:11px;color:#15803d;margin-top:4px;">Collect from library counter</div>
+        {% else %}
+          <span class="req-badge req-rejected"><i class="bi bi-x-circle-fill"></i> Rejected</span>
+          {% if r.admin_note %}<div style="font-size:11px;color:#b91c1c;margin-top:4px;">{{ r.admin_note }}</div>{% endif %}
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- LIBRARY BROWSER -->
+  <div class="library-layout">
+    <div class="cat-sidebar">
+      <div class="cat-label">Categories</div>
+      <a href="{{ url_for('main.student_portal') }}" class="cat-link {% if not category_filter %}active{% endif %}">
+        <span>All Books</span><span class="cat-count">{{ books|length }}</span>
+      </a>
+      {% for c in categories %}
+      <a href="{{ url_for('main.student_portal', category=c.id) }}" class="cat-link {% if category_filter|string == c.id|string %}active{% endif %}">
+        <span>{{ c.name }}</span><span class="cat-count">{{ c.books|length }}</span>
+      </a>
+      {% endfor %}
+    </div>
+
+    <div class="books-area">
+      <form class="search-student" method="GET">
+        {% if category_filter %}<input type="hidden" name="category" value="{{ category_filter }}"/>{% endif %}
+        <input type="text" name="search" value="{{ search }}" placeholder="Search books by title or author…"/>
+        <button type="submit" class="btn-primary-sm"><i class="bi bi-search"></i> Search</button>
+      </form>
+
+      {% if books %}
+      <div class="books-grid">
+        {% for b in books %}
+        <div class="book-card">
+          <div class="book-card-icon"><i class="bi bi-book-fill"></i></div>
+          <div class="book-card-title">{{ b.title }}</div>
+          <div class="book-card-author">{{ b.author }}</div>
+          <span class="book-card-cat">{{ b.category.name }}</span>
+          <div class="book-card-footer">
+            {% if b.available_quantity > 0 %}
+              <span class="avail-tag avail-yes"><i class="bi bi-check-circle-fill"></i> Available ({{ b.available_quantity }})</span>
+            {% else %}
+              <span class="avail-tag avail-no"><i class="bi bi-x-circle-fill"></i> Out of Stock</span>
+              {% if stock_info.get(b.id) %}
+                <div class="back-date"><i class="bi bi-clock"></i> Back by {{ stock_info[b.id] }}</div>
+              {% endif %}
+            {% endif %}
+
+            {% if b.id in pending_book_ids %}
+              <div class="btn-requested"><i class="bi bi-hourglass-split"></i> Request Pending</div>
+            {% else %}
+              <form method="POST" action="{{ url_for('main.student_request_book', book_id=b.id) }}">
+                <button type="submit" class="btn-request">
+                  <i class="bi bi-send-fill"></i> Request Book
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:60px 20px;color:var(--text-secondary);">
+        <i class="bi bi-search" style="font-size:48px;display:block;margin-bottom:12px;opacity:0.4;"></i>
+        No books found
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+</body>
+</html>

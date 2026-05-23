@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Fines — LibraryOS{% endblock %}
+{% block page_title %}Fine Management{% endblock %}
+
+{% block content %}
+<div class="table-card">
+  <div class="table-header">
+    <h3>All Fines</h3>
+    <div class="header-stats">
+      <span>Total: ₹{{ fines | sum(attribute='amount') | int }}</span>
+      <span>Unpaid: ₹{{ fines | selectattr('paid','equalto',false) | sum(attribute='amount') | int }}</span>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr><th>#</th><th>Book</th><th>Member</th><th>Amount</th><th>Status</th><th>Paid On</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for f in fines %}
+        <tr>
+          <td>{{ f.id }}</td>
+          <td>{{ f.issued_book.book.title }}</td>
+          <td>{{ f.issued_book.member.name }}</td>
+          <td><strong>₹{{ f.amount }}</strong></td>
+          <td>
+            {% if f.paid %}
+              <span class="badge-status badge-returned">Paid</span>
+            {% else %}
+              <span class="badge-status badge-overdue">Unpaid</span>
+            {% endif %}
+          </td>
+          <td>{{ f.paid_date.strftime('%d %b %Y') if f.paid_date else '—' }}</td>
+          <td>
+            {% if not f.paid %}
+            <form method="POST" action="{{ url_for('main.pay_fine', fine_id=f.id) }}">
+              <button class="btn-return"><i class="bi bi-check-circle-fill"></i> Mark Paid</button>
+            </form>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="empty-row">No fines recorded</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

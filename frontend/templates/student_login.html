@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Login — LibraryOS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"/>
+  <style>
+    .student-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(255,255,255,0.15); color:#fff;
+      padding:6px 14px; border-radius:20px; font-size:13px;
+      margin-bottom:20px; border:1px solid rgba(255,255,255,0.3);
+    }
+    .switch-link {
+      text-align:center; margin-top:20px; font-size:13px; color:var(--text-secondary);
+    }
+    .switch-link a { color:var(--accent); font-weight:600; }
+  </style>
+</head>
+<body>
+<div class="login-screen">
+  <div class="login-left">
+    <div class="art-circle c1"></div>
+    <div class="art-circle c2"></div>
+    <div class="art-circle c3"></div>
+    <div class="login-brand">
+      <span class="student-badge"><i class="bi bi-mortarboard-fill"></i> Student Portal</span>
+      <i class="bi bi-book-half"></i>
+      <h1>LibraryOS</h1>
+      <p>Smart Digital Library Automation Platform</p>
+    </div>
+  </div>
+
+  <div class="login-right">
+    <div class="login-box">
+      <h2>Student Login</h2>
+      <p class="login-sub">Enter your college email to access the library</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for cat, msg in messages %}
+            <div class="toast-msg toast-{{ cat }}" style="margin-bottom:14px;">
+              <i class="bi bi-exclamation-circle-fill"></i> {{ msg }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST">
+        <div class="form-group-custom">
+          <i class="bi bi-envelope-fill"></i>
+          <input type="email" name="email" placeholder="Your college email" required autofocus/>
+        </div>
+        <button type="submit" class="btn-login">
+          Access Portal <i class="bi bi-arrow-right"></i>
+        </button>
+      </form>
+
+      <div class="login-hint">
+        Use your registered college email address
+      </div>
+
+      <div class="switch-link">
+        Admin? <a href="{{ url_for('main.login') }}">Login here</a>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

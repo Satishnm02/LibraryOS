@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — LibraryOS{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- ── STAT CARDS ── -->
+<div class="stats-grid">
+  <div class="stat-card" style="--accent:#6366f1">
+    <div class="stat-icon"><i class="bi bi-journals"></i></div>
+    <div class="stat-info">
+      <span class="stat-label">Total Books</span>
+      <span class="stat-value">{{ total_books }}</span>
+    </div>
+  </div>
+  <div class="stat-card" style="--accent:#22c55e">
+    <div class="stat-icon"><i class="bi bi-book-fill"></i></div>
+    <div class="stat-info">
+      <span class="stat-label">Available</span>
+      <span class="stat-value">{{ available_books }}</span>
+    </div>
+  </div>
+  <div class="stat-card" style="--accent:#f59e0b">
+    <div class="stat-icon"><i class="bi bi-arrow-left-right"></i></div>
+    <div class="stat-info">
+      <span class="stat-label">Issued</span>
+      <span class="stat-value">{{ issued_books }}</span>
+    </div>
+  </div>
+  <div class="stat-card" style="--accent:#3b82f6">
+    <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+    <div class="stat-info">
+      <span class="stat-label">Members</span>
+      <span class="stat-value">{{ total_members }}</span>
+    </div>
+  </div>
+  <div class="stat-card" style="--accent:#ef4444">
+    <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
+    <div class="stat-info">
+      <span class="stat-label">Overdue</span>
+      <span class="stat-value">{{ overdue_books }}</span>
+    </div>
+  </div>
+  <div class="stat-card" style="--accent:#10b981">
+    <div class="stat-icon"><i class="bi bi-cash-coin"></i></div>
+    <div class="stat-info">
+      <span class="stat-label">Fines Collected</span>
+      <span class="stat-value">₹{{ total_fines }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── CHARTS ── -->
+<div class="charts-row">
+  <div class="chart-card">
+    <h3 class="chart-title">Books by Category</h3>
+    <canvas id="categoryChart"></canvas>
+  </div>
+  <div class="chart-card">
+    <h3 class="chart-title">Monthly Issues</h3>
+    <canvas id="monthlyChart"></canvas>
+  </div>
+</div>
+
+<!-- ── RECENT ACTIVITY ── -->
+<div class="table-card">
+  <div class="table-header">
+    <h3>Recent Issues</h3>
+    <a href="{{ url_for('main.issue_return') }}" class="btn-sm-outline">View All</a>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr><th>#</th><th>Book</th><th>Member</th><th>Issue Date</th><th>Due Date</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for ib in recent_issues %}
+        <tr>
+          <td>{{ ib.id }}</td>
+          <td>{{ ib.book.title }}</td>
+          <td>{{ ib.member.name }}</td>
+          <td>{{ ib.issue_date.strftime('%d %b %Y') }}</td>
+          <td>{{ ib.due_date.strftime('%d %b %Y') }}</td>
+          <td>
+            <span class="badge-status badge-{{ ib.status }}">{{ ib.status.title() }}</span>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="empty-row">No recent activity</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const catLabels = {{ category_data | map(attribute=0) | list | tojson }};
+const catValues = {{ category_data | map(attribute=1) | list | tojson }};
+const monthLabels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const monthValues = Array(12).fill(0);
+{% for month, count in monthly_data %}monthValues[{{ month }}-1] = {{ count }};{% endfor %}
+
+const palette = ['#6366f1','#22c55e','#f59e0b','#3b82f6','#ef4444','#10b981','#8b5cf6'];
+
+new Chart(document.getElementById('categoryChart'), {
+  type: 'doughnut',
+  data: { labels: catLabels, datasets:[{ data: catValues, backgroundColor: palette, borderWidth:0 }] },
+  options: { plugins:{ legend:{ position:'bottom', labels:{ color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary') }}}, cutout:'65%' }
+});
+
+new Chart(document.getElementById('monthlyChart'), {
+  type: 'bar',
+  data: { labels: monthLabels, datasets:[{ label:'Issues', data: monthValues, backgroundColor:'#6366f1', borderRadius:6 }] },
+  options: { plugins:{ legend:{ display:false }}, scales:{ x:{ grid:{display:false} }, y:{ grid:{ color:'rgba(128,128,128,.1)' }, beginAtZero:true } } }
+});
+</script>
+{% endblock %}

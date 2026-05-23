@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Reports — LibraryOS{% endblock %}
+{% block page_title %}Reports{% endblock %}
+
+{% block content %}
+<div class="tabs-container">
+  <div class="tab-buttons" id="reportTabs">
+    <button class="tab-btn active" data-tab="issued">Issued Books</button>
+    <button class="tab-btn" data-tab="returned">Returned Books</button>
+    <button class="tab-btn" data-tab="fines">Fines Report</button>
+    <button class="tab-btn" data-tab="members">Active Members</button>
+  </div>
+
+  <!-- ISSUED -->
+  <div class="tab-panel active" id="tab-issued">
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Currently Issued Books ({{ issued_report|length }})</h3>
+        <button onclick="printTable('tab-issued')" class="btn-sm-outline"><i class="bi bi-printer-fill"></i> Print</button>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Book</th><th>Author</th><th>Member</th><th>Issue Date</th><th>Due Date</th><th>Overdue</th></tr></thead>
+          <tbody>
+            {% for ib in issued_report %}
+            {% set fine = ib.calculate_fine() %}
+            <tr>
+              <td>{{ ib.id }}</td><td>{{ ib.book.title }}</td><td>{{ ib.book.author }}</td>
+              <td>{{ ib.member.name }}</td>
+              <td>{{ ib.issue_date.strftime('%d %b %Y') }}</td>
+              <td class="{% if fine>0 %}text-danger{% endif %}">{{ ib.due_date.strftime('%d %b %Y') }}</td>
+              <td>{% if fine>0 %}<span class="text-danger">₹{{ fine }}</span>{% else %}On time{% endif %}</td>
+            </tr>
+            {% else %}<tr><td colspan="7" class="empty-row">No data</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- RETURNED -->
+  <div class="tab-panel" id="tab-returned">
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Returned Books ({{ returned_report|length }})</h3>
+        <button onclick="printTable('tab-returned')" class="btn-sm-outline"><i class="bi bi-printer-fill"></i> Print</button>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Book</th><th>Member</th><th>Issue Date</th><th>Return Date</th><th>Fine</th></tr></thead>
+          <tbody>
+            {% for ib in returned_report %}
+            <tr>
+              <td>{{ ib.id }}</td><td>{{ ib.book.title }}</td><td>{{ ib.member.name }}</td>
+              <td>{{ ib.issue_date.strftime('%d %b %Y') }}</td>
+              <td>{{ ib.return_date.strftime('%d %b %Y') if ib.return_date else '—' }}</td>
+              <td>{% if ib.fine %}₹{{ ib.fine.amount }}{% else %}—{% endif %}</td>
+            </tr>
+            {% else %}<tr><td colspan="6" class="empty-row">No data</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINES -->
+  <div class="tab-panel" id="tab-fines">
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Fine Report ({{ fine_report|length }})</h3>
+        <button onclick="printTable('tab-fines')" class="btn-sm-outline"><i class="bi bi-printer-fill"></i> Print</button>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Book</th><th>Member</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody>
+            {% for f in fine_report %}
+            <tr>
+              <td>{{ f.id }}</td>
+              <td>{{ f.issued_book.book.title }}</td>
+              <td>{{ f.issued_book.member.name }}</td>
+              <td>₹{{ f.amount }}</td>
+              <td><span class="badge-status {% if f.paid %}badge-returned{% else %}badge-overdue{% endif %}">{{ 'Paid' if f.paid else 'Unpaid' }}</span></td>
+              <td>{{ f.paid_date.strftime('%d %b %Y') if f.paid_date else '—' }}</td>
+            </tr>
+            {% else %}<tr><td colspan="6" class="empty-row">No data</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVE MEMBERS -->
+  <div class="tab-panel" id="tab-members">
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Active Members ({{ active_members|length }})</h3>
+        <button onclick="printTable('tab-members')" class="btn-sm-outline"><i class="bi bi-printer-fill"></i> Print</button>
+      </div>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Department</th><th>Joined</th></tr></thead>
+          <tbody>
+            {% for m in active_members %}
+            <tr>
+              <td>{{ m.id }}</td><td>{{ m.name }}</td><td>{{ m.email }}</td>
+              <td>{{ m.phone }}</td><td>{{ m.department }}</td>
+              <td>{{ m.join_date.strftime('%d %b %Y') }}</td>
+            </tr>
+            {% else %}<tr><td colspan="6" class="empty-row">No data</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

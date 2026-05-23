@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+{% block title %}Books — LibraryOS{% endblock %}
+{% block page_title %}Book Management{% endblock %}
+
+{% block content %}
+<div class="page-actions">
+  <form class="search-bar" method="GET">
+    <i class="bi bi-search"></i>
+    <input type="text" name="search" value="{{ search }}" placeholder="Search title, author, ISBN…"/>
+    <select name="category" id="categorySelect">
+      <option value="">All Categories</option>
+      {% for c in categories %}
+        <option value="{{ c.id }}" {% if category_filter|string == c.id|string %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn-primary-sm">Filter</button>
+  </form>
+  <div class="action-btns">
+    <button class="btn-primary-sm" data-bs-toggle="modal" data-bs-target="#addCatModal">
+      <i class="bi bi-tag-fill"></i> Add Category
+    </button>
+    <button class="btn-primary-sm" data-bs-toggle="modal" data-bs-target="#addBookModal">
+      <i class="bi bi-plus-lg"></i> Add Book
+    </button>
+  </div>
+</div>
+
+<div style="display:flex; gap:20px; align-items:flex-start;">
+
+  <!-- CATEGORY SIDEBAR -->
+  <div style="min-width:200px; background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.08); padding:16px;">
+    <h6 style="font-size:13px; font-weight:700; color:#6c757d; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Categories</h6>
+    <a href="{{ url_for('main.books') }}"
+       style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-radius:8px; text-decoration:none; font-size:14px; margin-bottom:4px;
+       {% if not category_filter %}background:#6c63ff; color:#fff; font-weight:600;{% else %}color:#333;{% endif %}">
+      <span>All Books</span>
+      <span style="font-size:12px; {% if not category_filter %}color:#fff;{% else %}color:#6c63ff;{% endif %}">{{ books.total }}</span>
+    </a>
+    {% for c in categories %}
+    <a href="{{ url_for('main.books', category=c.id) }}"
+       style="display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border-radius:8px; text-decoration:none; font-size:14px; margin-bottom:4px;
+       {% if category_filter|string == c.id|string %}background:#6c63ff; color:#fff; font-weight:600;{% else %}color:#333;{% endif %}">
+      <span>{{ c.name }}</span>
+      <span style="font-size:12px; {% if category_filter|string == c.id|string %}color:#fff;{% else %}color:#6c63ff;{% endif %}">
+        {{ c.books|length }}
+      </span>
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- BOOKS TABLE -->
+  <div style="flex:1;">
+    <div class="table-card">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>Title</th><th>Author</th><th>ISBN</th>
+              <th>Category</th><th>Qty</th><th>Available</th><th>Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in books.items %}
+            <tr>
+              <td>{{ b.id }}</td>
+              <td><strong>{{ b.title }}</strong></td>
+              <td>{{ b.author }}</td>
+              <td><code>{{ b.isbn }}</code></td>
+              <td>{{ b.category.name }}</td>
+              <td>{{ b.quantity }}</td>
+              <td>{{ b.available_quantity }}</td>
+              <td>
+                {% if b.available_quantity > 0 %}
+                  <span class="badge-status badge-issued">Available</span>
+                {% else %}
+                  <div>
+                    <span class="badge-status badge-overdue">Out of Stock</span>
+                    {% if stock_info.get(b.id) %}
+                      <div style="font-size:11px; color:#e67e22; margin-top:4px;">
+                        <i class="bi bi-clock"></i> Back by {{ stock_info[b.id] }}
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </td>
+              <td class="actions-cell">
+                <button class="btn-icon edit-icon"
+                  data-bs-toggle="modal" data-bs-target="#editBookModal"
+                  data-id="{{ b.id }}" data-title="{{ b.title }}" data-author="{{ b.author }}"
+                  data-isbn="{{ b.isbn }}" data-publisher="{{ b.publisher }}"
+                  data-year="{{ b.publish_year }}" data-qty="{{ b.quantity }}"
+                  data-catid="{{ b.category_id }}">
+                  <i class="bi bi-pencil-fill"></i>
+                </button>
+                <form method="POST" action="{{ url_for('main.delete_book', bid=b.id) }}"
+                      onsubmit="return confirm('Delete this book?');" style="display:inline">
+                  <button class="btn-icon delete-icon"><i class="bi bi-trash3-fill"></i></button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="9" class="empty-row">No books found</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if books.pages > 1 %}
+      <div class="pagination-row">
+        {% if books.has_prev %}
+          <a href="{{ url_for('main.books', page=books.prev_num, search=search, category=category_filter) }}" class="page-btn">&laquo;</a>
+        {% endif %}
+        {% for p in books.iter_pages() %}
+          {% if p %}
+            <a href="{{ url_for('main.books', page=p, search=search, category=category_filter) }}"
+               class="page-btn {% if p==books.page %}active{% endif %}">{{ p }}</a>
+          {% endif %}
+        {% endfor %}
+        {% if books.has_next %}
+          <a href="{{ url_for('main.books', page=books.next_num, search=search, category=category_filter) }}" class="page-btn">&raquo;</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ADD BOOK MODAL -->
+<div class="modal fade" id="addBookModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content modal-custom">
+      <div class="modal-header-custom">
+        <h5><i class="bi bi-plus-circle-fill"></i> Add New Book</h5>
+        <button data-bs-dismiss="modal" class="modal-close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <form method="POST" action="{{ url_for('main.add_book') }}">
+        <div class="modal-body-custom">
+          <div class="form-grid-2">
+            <div class="form-group-modal">
+              <label>Title *</label>
+              <input type="text" name="title" required class="input-custom"/>
+            </div>
+            <div class="form-group-modal">
+              <label>Author *</label>
+              <input type="text" name="author" required class="input-custom"/>
+            </div>
+            <div class="form-group-modal">
+              <label>ISBN *</label>
+              <input type="text" name="isbn" required class="input-custom"/>
+            </div>
+            <div class="form-group-modal">
+              <label>Publisher</label>
+              <input type="text" name="publisher" class="input-custom"/>
+            </div>
+            <div class="form-group-modal">
+              <label>Publish Year</label>
+              <input type="number" name="publish_year" min="1000" max="2099" class="input-custom"/>
+            </div>
+            <div class="form-group-modal">
+              <label>Quantity *</label>
+              <input type="number" name="quantity" min="1" value="1" required class="input-custom"/>
+            </div>
+            <div class="form-group-modal span-2">
+              <label>Category *</label>
+              {% if category_filter %}
+                {% for c in categories %}
+                  {% if c.id|string == category_filter|string %}
+                    <input type="text" class="input-custom" value="{{ c.name }}" readonly
+                           style="background:#f0eeff; color:#6c63ff; font-weight:600; cursor:not-allowed;"/>
+                    <input type="hidden" name="category_id" value="{{ c.id }}"/>
+                  {% endif %}
+                {% endfor %}
+              {% else %}
+                <select name="category_id" required class="input-custom">
+                  {% for c in categories %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                  {% endfor %}
+                </select>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer-custom">
+          <button type="button" data-bs-dismiss="modal" class="btn-cancel">Cancel</button>
+          <button type="submit" class="btn-submit"><i class="bi bi-check-lg"></i> Add Book</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- EDIT BOOK MODAL -->
+<div class="modal fade" id="editBookModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content modal-custom">
+      <div class="modal-header-custom">
+        <h5><i class="bi bi-pencil-fill"></i> Edit Book</h5>
+        <button data-bs-dismiss="modal" class="modal-close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <form method="POST" id="editBookForm" action="">
+        <div class="modal-body-custom">
+          <div class="form-grid-2">
+            <div class="form-group-modal">
+              <label>Title *</label>
+              <input type="text" name="title" id="edit_title" required class="input-custom"/>
+            </div>
+            <div class="form-group-modal">
+              <label>Author *</label>
+              <input type="text" name="author" id="edit_author" required class="input-custom"/>
+            </div>
+            <div class="form-group-modal">
+              <label>ISBN *</label>
+              <input type="text" name="isbn" id="edit_isbn" required class="input-custom"/>
+            </div>
+            <div class="form-group-modal">
+              <label>Publisher</label>
+              <input type="text" name="publisher" id="edit_publisher" class="input-custom"/>
+            </div>
+            <div class="form-group-modal">
+              <label>Publish Year</label>
+              <input type="number" name="publish_year" id="edit_year" min="1000" max="2099" class="input-custom"/>
+            </div>
+            <div class="form-group-modal">
+              <label>Quantity *</label>
+              <input type="number" name="quantity" id="edit_qty" min="1" required class="input-custom"/>
+            </div>
+            <div class="form-group-modal span-2">
+              <label>Category *</label>
+              <select name="category_id" id="edit_catid" required class="input-custom">
+                {% for c in categories %}
+                  <option value="{{ c.id }}">{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer-custom">
+          <button type="button" data-bs-dismiss="modal" class="btn-cancel">Cancel</button>
+          <button type="submit" class="btn-submit"><i class="bi bi-check-lg"></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- ADD CATEGORY MODAL -->
+<div class="modal fade" id="addCatModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content modal-custom">
+      <div class="modal-header-custom">
+        <h5><i class="bi bi-tag-fill"></i> Add Category</h5>
+        <button data-bs-dismiss="modal" class="modal-close"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <form method="POST" action="{{ url_for('main.add_category') }}">
+        <div class="modal-body-custom">
+          <div class="form-group-modal">
+            <label>Category Name *</label>
+            <input type="text" name="name" required class="input-custom"/>
+          </div>
+          <div class="form-group-modal">
+            <label>Description</label>
+            <textarea name="description" rows="3" class="input-custom"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer-custom">
+          <button type="button" data-bs-dismiss="modal" class="btn-cancel">Cancel</button>
+          <button type="submit" class="btn-submit">Add Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.edit-icon').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.getElementById('edit_title').value     = this.dataset.title;
+    document.getElementById('edit_author').value    = this.dataset.author;
+    document.getElementById('edit_isbn').value      = this.dataset.isbn;
+    document.getElementById('edit_publisher').value = this.dataset.publisher;
+    document.getElementById('edit_year').value      = this.dataset.year;
+    document.getElementById('edit_qty').value       = this.dataset.qty;
+    document.getElementById('edit_catid').value     = this.dataset.catid;
+    document.getElementById('editBookForm').action  = '/books/edit/' + this.dataset.id;
+  });
+});
+</script>
+{% endblock %}
