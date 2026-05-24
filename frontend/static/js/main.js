@@ -51,13 +51,20 @@ document.getElementById('editMemberModal')?.addEventListener('show.bs.modal', e 
   document.getElementById('editMemberForm').action = `/members/edit/${btn.dataset.id}`;
 });
 
-// ── REPORT TABS ───────────────────────────────────────
+// ── TABS (works for reports AND requests pages) ───────
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    // find the parent tabs-container
+    const container = btn.closest('.tabs-container');
+    if (!container) return;
+    // deactivate all buttons and panels in THIS container only
+    container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    container.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    // activate clicked button and matching panel
     btn.classList.add('active');
-    document.getElementById(`tab-${btn.dataset.tab}`)?.classList.add('active');
+    const tabId = btn.dataset.tab;
+    const panel = container.querySelector(`#tab-${tabId}`);
+    if (panel) panel.classList.add('active');
   });
 });
 

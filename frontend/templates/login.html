@@ -2,45 +2,389 @@
 {% block title %}Login — LibraryOS{% endblock %}
 
 {% block auth_content %}
+<style>
+  .login-screen {
+    display: flex;
+    min-height: 100vh;
+    background: var(--bg);
+  }
+
+  /* LEFT PANEL */
+  .login-left {
+    flex: 1;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #7c3aed 100%);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  /* Animated floating circles */
+  .float-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    animation: floatUp 8s ease-in-out infinite;
+  }
+  .fc1 { width:500px; height:500px; top:-150px; right:-150px; animation-delay:0s; }
+  .fc2 { width:300px; height:300px; bottom:-80px; left:-80px; animation-delay:2s; }
+  .fc3 { width:200px; height:200px; top:40%; left:10%; animation-delay:4s; }
+  .fc4 { width:150px; height:150px; bottom:20%; right:10%; animation-delay:1s; }
+  .fc5 { width:80px; height:80px; top:20%; right:25%; animation-delay:3s; }
+
+  @keyframes floatUp {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+  }
+
+  .login-brand-wrap {
+    position: relative;
+    z-index: 2;
+    color: #fff;
+    text-align: center;
+  }
+
+  .brand-logo-box {
+    width: 80px;
+    height: 80px;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 24px;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 24px;
+    font-size: 36px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+
+  .login-brand-wrap h1 {
+    font-family: var(--font-head);
+    font-size: 42px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    letter-spacing: -1px;
+  }
+
+  .login-brand-wrap p {
+    font-size: 15px;
+    opacity: 0.8;
+    margin-bottom: 40px;
+  }
+
+  /* Feature pills */
+  .feature-pills {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .feature-pill {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50px;
+    padding: 10px 20px;
+    font-size: 14px;
+    color: #fff;
+    backdrop-filter: blur(10px);
+  }
+
+  .feature-pill i {
+    width: 28px;
+    height: 28px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  /* RIGHT PANEL */
+  .login-right {
+    width: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    background: var(--bg);
+  }
+
+  .login-box {
+    width: 100%;
+  }
+
+  .login-greeting {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(99,102,241,0.1);
+    color: var(--accent);
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    border: 1px solid rgba(99,102,241,0.2);
+  }
+
+  .login-box h2 {
+    font-family: var(--font-head);
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+
+  .login-sub {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-bottom: 32px;
+  }
+
+  .input-wrapper {
+    position: relative;
+    margin-bottom: 16px;
+  }
+
+  .input-wrapper i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 16px;
+    pointer-events: none;
+  }
+
+  .input-wrapper input {
+    width: 100%;
+    padding: 14px 16px 14px 46px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 15px;
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .input-wrapper input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
+  }
+
+  .input-wrapper input::placeholder {
+    color: var(--text-secondary);
+  }
+
+  .btn-login {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--font-head);
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.4);
+  }
+
+  .btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(99,102,241,0.5);
+  }
+
+  .btn-login:active {
+    transform: translateY(0);
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .btn-student {
+    width: 100%;
+    padding: 13px;
+    background: var(--surface);
+    color: var(--text-primary);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+  }
+
+  .btn-student:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(99,102,241,0.05);
+  }
+
+  .login-hint {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin-top: 20px;
+    padding: 10px 16px;
+    background: var(--surface2);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .flash-wrap {
+    margin-bottom: 20px;
+  }
+
+  .flash-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    animation: slideIn 0.3s ease;
+  }
+
+  .flash-danger  { background:rgba(239,68,68,.1); color:#b91c1c; border:1px solid rgba(239,68,68,.2); }
+  .flash-success { background:rgba(34,197,94,.1); color:#15803d; border:1px solid rgba(34,197,94,.2); }
+  .flash-info    { background:rgba(59,130,246,.1); color:#1d4ed8; border:1px solid rgba(59,130,246,.2); }
+  .flash-warning { background:rgba(245,158,11,.1); color:#b45309; border:1px solid rgba(245,158,11,.2); }
+
+  @keyframes slideIn {
+    from { opacity:0; transform:translateY(-8px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  @media (max-width: 768px) {
+    .login-left { display: none; }
+    .login-right { width: 100%; padding: 32px 24px; }
+  }
+</style>
+
 <div class="login-screen">
+
+  <!-- LEFT -->
   <div class="login-left">
-    <div class="login-art">
-      <div class="art-circle c1"></div>
-      <div class="art-circle c2"></div>
-      <div class="art-circle c3"></div>
-      <div class="login-brand">
+    <div class="float-circle fc1"></div>
+    <div class="float-circle fc2"></div>
+    <div class="float-circle fc3"></div>
+    <div class="float-circle fc4"></div>
+    <div class="float-circle fc5"></div>
+
+    <div class="login-brand-wrap">
+      <div class="brand-logo-box">
         <i class="bi bi-book-half"></i>
-        <h1>LibraryOS</h1>
-        <p>Smart Digital Library Automation Platform</p>
+      </div>
+      <h1>LibraryOS</h1>
+      <p>Smart Digital Library Automation Platform</p>
+
+      <div class="feature-pills">
+        <div class="feature-pill">
+          <i class="bi bi-journals"></i>
+          Manage books, categories & inventory
+        </div>
+        <div class="feature-pill">
+          <i class="bi bi-people-fill"></i>
+          Member management & tracking
+        </div>
+        <div class="feature-pill">
+          <i class="bi bi-arrow-left-right"></i>
+          Issue, return & fine automation
+        </div>
+        <div class="feature-pill">
+          <i class="bi bi-bar-chart-line-fill"></i>
+          Reports & analytics dashboard
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- RIGHT -->
   <div class="login-right">
     <div class="login-box">
+
+      <div class="login-greeting">
+        <i class="bi bi-shield-lock-fill"></i> Admin Portal
+      </div>
+
       <h2>Welcome back</h2>
-      <p class="login-sub">Sign in to your admin account</p>
+      <p class="login-sub">Sign in to manage your library</p>
 
       {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for cat, msg in messages %}
-          <div class="alert alert-{{ cat }} alert-dismissible">{{ msg }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          </div>
-        {% endfor %}
+        {% if messages %}
+        <div class="flash-wrap">
+          {% for cat, msg in messages %}
+            <div class="flash-item flash-{{ cat }}">
+              <i class="bi {% if cat=='success' %}bi-check-circle-fill{% elif cat=='danger' %}bi-x-circle-fill{% elif cat=='warning' %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %}"></i>
+              {{ msg }}
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
       {% endwith %}
 
       <form method="POST" action="{{ url_for('main.login') }}">
-        <div class="form-group-custom">
-          <i class="bi bi-person"></i>
-          <input type="text" name="username" placeholder="Username" required autocomplete="username"/>
+        <div class="input-wrapper">
+          <i class="bi bi-person-fill"></i>
+          <input type="text" name="username" placeholder="Username" required autocomplete="username" autofocus/>
         </div>
-        <div class="form-group-custom">
-          <i class="bi bi-lock"></i>
+        <div class="input-wrapper">
+          <i class="bi bi-lock-fill"></i>
           <input type="password" name="password" placeholder="Password" required autocomplete="current-password"/>
         </div>
-        <button type="submit" class="btn-login">Sign In <i class="bi bi-arrow-right"></i></button>
+        <button type="submit" class="btn-login">
+          Sign In <i class="bi bi-arrow-right"></i>
+        </button>
       </form>
-      <p class="login-hint">Default: <strong>admin</strong> / <strong>admin123</strong></p>
+
+      <div class="divider">or</div>
+
+      <a href="{{ url_for('main.student_login') }}" class="btn-student">
+        <i class="bi bi-mortarboard-fill"></i> Student Portal
+      </a>
+
+      <p class="login-hint">
+        Default credentials: <strong>admin</strong> / <strong>admin123</strong>
+      </p>
+
     </div>
   </div>
 </div>
